@@ -19,8 +19,9 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        minecraft: ["Courier New", "monospace"],
         montserrat: ["Montserrat", "sans-serif"],
-        sans: ["Open Sans", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

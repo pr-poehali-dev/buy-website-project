@@ -1,236 +1,218 @@
 import { useState } from "react";
-import Header from "@/components/Header";
-import ProductCard from "@/components/ProductCard";
+import MinecraftHeader from "@/components/MinecraftHeader";
+import DonatePackageCard from "@/components/DonatePackageCard";
+import DonateForm from "@/components/DonateForm";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
 
-interface Product {
+interface DonatePackage {
   id: number;
   name: string;
   price: number;
   originalPrice?: number;
   image: string;
-  category: string;
-  inStock: boolean;
+  privileges: string[];
+  popular?: boolean;
+  color: string;
 }
 
-interface CartItem {
+interface DonateItem {
   id: number;
   name: string;
   price: number;
-  image: string;
-  quantity: number;
+  color: string;
 }
 
-const mockProducts: Product[] = [
+const donatePackages: DonatePackage[] = [
   {
     id: 1,
-    name: "Apple iPhone 15 Pro Max 256GB",
-    price: 129990,
-    originalPrice: 139990,
+    name: "VIP",
+    price: 299,
+    originalPrice: 399,
     image:
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=300&fit=crop",
-    category: "Смартфоны",
-    inStock: true,
+      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+    privileges: [
+      "Цветной ник",
+      "Киты каждые 12 часов",
+      "Доступ к /fly",
+      "Приватные регионы x2",
+    ],
+    color: "from-green-500 to-green-600",
   },
   {
     id: 2,
-    name: 'MacBook Air M2 13" 256GB',
-    price: 99990,
-    originalPrice: 119990,
+    name: "Premium",
+    price: 599,
+    originalPrice: 799,
     image:
-      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&h=300&fit=crop",
-    category: "Ноутбуки",
-    inStock: true,
+      "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop",
+    privileges: [
+      "Все из VIP",
+      "Доступ к /god",
+      "Киты каждые 6 часов",
+      "Креатив в регионах",
+      "Телепорты без ожидания",
+    ],
+    popular: true,
+    color: "from-blue-500 to-blue-600",
   },
   {
     id: 3,
-    name: "Sony WH-1000XM5 Наушники",
-    price: 24990,
+    name: "Ultimate",
+    price: 999,
+    originalPrice: 1299,
     image:
-      "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=300&fit=crop",
-    category: "Аудио",
-    inStock: true,
+      "https://images.unsplash.com/photo-1518709268805-4e9042af2ac1?w=400&h=300&fit=crop",
+    privileges: [
+      "Все из Premium",
+      "Доступ к /vanish",
+      "Киты каждые 3 часа",
+      "WorldEdit",
+      "Спавн мобов",
+    ],
+    color: "from-purple-500 to-purple-600",
   },
   {
     id: 4,
-    name: 'iPad Pro 12.9" M2 256GB',
-    price: 89990,
-    originalPrice: 99990,
+    name: "Legend",
+    price: 1499,
     image:
-      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=300&fit=crop",
-    category: "Планшеты",
-    inStock: false,
-  },
-  {
-    id: 5,
-    name: "Apple Watch Series 9 45mm",
-    price: 39990,
-    image:
-      "https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=400&h=300&fit=crop",
-    category: "Смарт-часы",
-    inStock: true,
-  },
-  {
-    id: 6,
-    name: "AirPods Pro 2 поколения",
-    price: 19990,
-    originalPrice: 22990,
-    image:
-      "https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=300&fit=crop",
-    category: "Аудио",
-    inStock: true,
+      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
+    privileges: [
+      "Все из Ultimate",
+      "Кастомные команды",
+      "Безлимитные регионы",
+      "Модерские права",
+      "Доступ к админ-панели",
+    ],
+    color: "from-yellow-500 to-orange-500",
   },
 ];
 
 const Index = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("Все");
+  const [selectedPackage, setSelectedPackage] = useState<DonateItem | null>(
+    null,
+  );
+  const [showDonateForm, setShowDonateForm] = useState(false);
 
-  const categories = [
-    "Все",
-    ...Array.from(new Set(mockProducts.map((p) => p.category))),
-  ];
-
-  const filteredProducts =
-    selectedCategory === "Все"
-      ? mockProducts
-      : mockProducts.filter((p) => p.category === selectedCategory);
-
-  const handleAddToCart = (product: Product) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: 1,
-        },
-      ];
+  const handleDonate = (donatePackage: DonatePackage) => {
+    setSelectedPackage({
+      id: donatePackage.id,
+      name: donatePackage.name,
+      price: donatePackage.price,
+      color: donatePackage.color,
     });
+    setShowDonateForm(true);
   };
 
-  const handleUpdateQuantity = (id: number, quantity: number) => {
-    if (quantity === 0) {
-      setCartItems((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      setCartItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
-      );
-    }
-  };
-
-  const handleRemoveItem = (id: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const handleCheckout = () => {
-    alert(
-      "Переход к оформлению заказа! В следующей версии здесь будет полная форма оплаты.",
-    );
+  const handleCloseDonateForm = () => {
+    setShowDonateForm(false);
+    setSelectedPackage(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        cartItems={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onCheckout={handleCheckout}
-      />
+    <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900">
+      <MinecraftHeader />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-purple-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold font-montserrat mb-4">
-            Лучшая техника <br />
-            по лучшим ценам
+      <section className="relative py-20 px-4 text-center text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="relative z-10 container mx-auto">
+          <h1 className="text-5xl md:text-7xl font-bold font-minecraft mb-6 text-yellow-400 drop-shadow-lg">
+            MineServer
           </h1>
-          <p className="text-xl mb-8 opacity-90">
-            Скидки до 30% на премиальную электронику
+          <p className="text-xl md:text-2xl mb-8 text-green-200">
+            Получи донат-привилегии мгновенно!
           </p>
-          <Button size="lg" variant="secondary" className="font-medium">
-            <Icon name="Zap" size={20} className="mr-2" />
-            Смотреть акции
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8">
+            <div className="bg-black/50 px-6 py-3 rounded-lg border border-green-500">
+              <span className="text-green-400 font-mono">Онлайн: </span>
+              <span className="text-white font-bold">247/500</span>
+            </div>
+            <div className="bg-black/50 px-6 py-3 rounded-lg border border-yellow-500">
+              <span className="text-yellow-400 font-mono">IP: </span>
+              <span className="text-white font-bold">play.mineserver.ru</span>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 text-lg"
+          >
+            <Icon name="Gamepad2" size={24} className="mr-2" />
+            Начать играть
           </Button>
         </div>
+
+        {/* Minecraft blocks decoration */}
+        <div className="absolute top-10 left-10 w-16 h-16 bg-amber-600 opacity-20 rotate-45"></div>
+        <div className="absolute bottom-20 right-20 w-12 h-12 bg-green-600 opacity-20 rotate-12"></div>
+        <div className="absolute top-1/2 left-5 w-8 h-8 bg-stone-600 opacity-20"></div>
       </section>
 
-      {/* Categories */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="flex flex-wrap gap-2 mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
-              className="rounded-full"
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
+      {/* Donate Packages */}
+      <section className="container mx-auto px-4 py-16">
+        <h2 className="text-4xl font-bold text-center mb-12 text-yellow-400 font-minecraft">
+          Донат-привилегии
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {donatePackages.map((pkg) => (
+            <DonatePackageCard
+              key={pkg.id}
+              package={pkg}
+              onDonate={handleDonate}
             />
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section className="bg-white py-16">
+      <section className="bg-black/30 py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 font-montserrat">
-            Почему выбирают нас
+          <h2 className="text-3xl font-bold text-center mb-12 text-yellow-400 font-minecraft">
+            Почему выбирают нас?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Icon name="Truck" size={32} className="text-primary" />
+              <div className="bg-green-600/20 rounded-lg w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-green-500">
+                <Icon name="Zap" size={40} className="text-yellow-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Быстрая доставка</h3>
-              <p className="text-gray-600">
-                Доставим в течение 24 часов по всей России
+              <h3 className="text-xl font-semibold mb-2 text-green-400">
+                Мгновенная выдача
+              </h3>
+              <p className="text-green-200">
+                Привилегии выдаются автоматически после оплаты
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Icon name="Shield" size={32} className="text-primary" />
+              <div className="bg-green-600/20 rounded-lg w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-green-500">
+                <Icon name="Shield" size={40} className="text-yellow-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Гарантия качества</h3>
-              <p className="text-gray-600">
-                Только оригинальная техника с гарантией
+              <h3 className="text-xl font-semibold mb-2 text-green-400">
+                Безопасность
+              </h3>
+              <p className="text-green-200">
+                Защищённые платежи и гарантия получения доната
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Icon name="Headphones" size={32} className="text-primary" />
+              <div className="bg-green-600/20 rounded-lg w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-green-500">
+                <Icon name="Clock" size={40} className="text-yellow-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Поддержка 24/7</h3>
-              <p className="text-gray-600">
-                Наши специалисты готовы помочь в любое время
+              <h3 className="text-xl font-semibold mb-2 text-green-400">
+                Поддержка 24/7
+              </h3>
+              <p className="text-green-200">
+                Администрация поможет решить любые вопросы
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Donate Form Modal */}
+      {showDonateForm && selectedPackage && (
+        <DonateForm package={selectedPackage} onClose={handleCloseDonateForm} />
+      )}
     </div>
   );
 };
